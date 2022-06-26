@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <style>
+        mark {
+            background-color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Upload -->
+    <form action="amivoice" method="post" enctype="multipart/form-data">
+        <input type="submit" value="Upload">
+    </form>
+    <br>
+    <!-- Paragraph -->
+    <input type="text" name="search" id="search" placeholder="Search">
+    <input type="button" value="Search" onclick="search()">
+
+    <select name="select" id="select">
+        <% for (var i = 0; i < atr.length; i++) { %>
+            <option value="<%= atr[i].text %>" id="<%= atr[i].session_id %>" ><%= atr[i].name %></option>
+        <% } %>
+        <input type="button" value="Choose" onclick="changeParagraph()">
+    <p id="paragraph">
+        <%= content[0]%>
+    </p>
+</body>
+
+<script>
+    function changeParagraph() {
+        const select = document.getElementById('select').value;
+        const paragraph = document.getElementById('paragraph');
+        if(select === paragraph.innerHTML){
+            return;
+        }else{
+            paragraph.innerHTML = select;
+        }
+    }
+
+    function search() {
+        const search = document.getElementById('search').value;
+        const paragraph = document.getElementById('paragraph').innerHTML;
+        //call post search
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://localhost:3000/search', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({
+            search: search,
+            paragraph:paragraph
+        }));
+
+        xhr.onreadystatechange = function() {
+            //get json respone
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                const data = JSON.parse(xhr.responseText);
+                const paragraph = document.getElementById('paragraph');
+                //sort data by length of token
+                data.sort(function(a, b) {
+                    return b.token.length - a.token.length;
+                });
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i].token.indexOf(paragraph != -1)) {
+                        paragraph.innerHTML = paragraph.innerHTML.replaceAll(data[i].token, `<mark>${data[i].token}</mark>`);
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+</html>
